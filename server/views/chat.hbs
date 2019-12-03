@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>App || User List</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{> common_head}}
+</head>
+<body>
+<!-- navbar -->
+{{> header}}
+<!-- navbar ends here -->
+<div class="container-fluid text-center">    
+  <div class="row content">
+    <div class="col-sm-2 sidenav">
+      <p><a href="#">Hi <span class="first_user"></a></p>
+      {{!-- <p><a href="#">Link</a></p>
+      <p><a href="#">Link</a></p> --}}
+      <div class="well">
+        <ul class="first_user_cards list-group"></ul>
+      </div>
+    </div>
+    <div class="col-sm-8 text-left"> 
+        <input type="hidden" name="username" id="username" value="{{name}}"> 
+        <input type="hidden" name="email" id="email" value="{{email}}"> 
+        <input type="hidden" name="user_id" id="user_id" value="{{user_id}}"> 
+        <div class="welcome">
+            <h1>Welcome</h1>
+            <p></p>
+            <div class="alert alert-warning instruction_div" style="display:none"></div>
+        </div>
+      <hr>
+      <div class="row cards_div"  style="display:none">
+        
+          
+          <div class="panel panel-info">
+            <div class="panel-heading">Panel with panel-info class</div>
+            <div class="panel-body">
+              <div class='alert alert-success user-win-noti text-center' style="display:none" >Congratulation! You Win this turn.</div>
+                <div class='alert alert-danger user-lost-noti text-center' style="display:none">Sorry! You Lost thid turn.</div>
+              <div class="col-md-6 first_user_card" >
+                
+                 <img src="" class="img-thumbnail user_1_img" alt="Cards" style="display:none"> 
+              </div>
+              <div class="col-md-6 first_user_card" >
+               
+                 <img src="" class="img-thumbnail user_2_img" alt="Cards" style="display:none"> 
+              </div>
+            </div>
+          </div>
+
+        
+        
+      </div>
+        <table class="table table-striped" id="users-score-card">
+          <thead>
+            <tr>
+              <th>Pass Number</th>
+              <th>Score <span id="f_user_span"></span></th>
+              <th>Score <span id="s_user_span"></span></th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+    </div>
+    <div class="col-sm-2 sidenav">
+        <p><a href="#">Hi <span class="second_user"></a></p>
+        <div class="well">
+        <ul class="second_user_cards list-group"></ul>
+      </div>
+      {{!-- <div class="well">
+        <p>ADS</p>
+      </div> --}}
+      {{!-- <div class="well">
+        <p>ADS</p>
+      </div> --}}
+    </div>
+  </div>
+</div>
+
+{{!-- model starts here --}}
+<div class="modal fade" id="player_modal_id" role="dialog">
+    <div class="modal-dialog">
+    
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title text-warning">Warming! Stop the game.</h4>
+        </div>
+        <div class="modal-body">
+          <p class='warning-message'>Some text in the modal.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+{{!-- model ends here --}}
+
+{{> footer  }}
+</body>
+<script>
+    var socket = io();
+    socket.on('connect',()=>{
+        console.log('connected from server');
+        var name = $("#username").val();
+        var email = $("#email").val();
+        var user_id = $("#user_id").val();
+        socket.emit('send_user_info',{
+            name:name,
+            email:email,
+            user_id:user_id
+        },function(getCB){
+            if(getCB.status=="0"){
+                alert(getCB.res);
+            }
+        })
+    })
+
+    socket.on('welcome_user',function(data){
+       
+        $(".first_user").text(data.user_det.name);
+        $(".welcome p").text(data.message);
+    })
+
+    socket.on('welcome_both_user',function(data){
+        
+        //$(".first_user").text(data.user_det.name);
+        if(data.user_det[0]){
+            var f_user_det = data.user_det[0];
+            $(".first_user").text(f_user_det.name);
+        }
+        if(data.user_det[1]){
+            var s_user_det = data.user_det[1];
+            $(".second_user").text(s_user_det.name);
+        }
+        $(".welcome p").text(data.message);
+    })
+
+    socket.on('stop_game',function(data){
+        var message = `You have to restart the game. Because your partner (${data.del_user_det.name}) have left the game suddenly. To restart the game please relode the page.`
+        $(".warning-message").text(message);
+        $("#player_modal_id").modal();
+
+    })
+    socket.on('start_game',function(data){
+      var player1_card = '';
+      var player2_card = '';
+      var first_user = data.users_detl[0];
+      var second_user = data.users_detl[1];
+      var first_user_id = first_user.id;
+      var second_user_id = second_user.id;
+      var i;
+      
+      
+      var curr_user_id = socket.id;
+      
+      
+      if(curr_user_id==first_user_id){
+
+      for(i=0; i<5; i++){
+        player1_card= player1_card+`<li class="list-group-item" onclick="throw_card('${data.cards[i].card_num}','${data.cards[i].priority_num}')" ><img src='assets/cards/${data.cards[i].img_name}'></li>`;
+      }
+      $(".instruction_div").text(`Hi ${first_user.name} this is your turn. `).show();
+      for(i=5; i<10; i++){
+        player2_card= player2_card+`<li class="list-group-item"  ><img src='assets/cards/blank-card.jpg'></li>`;
+      }
+
+      }else{
+      for(i=5; i<10; i++){
+        player2_card= player2_card+`<li class="list-group-item" onclick="throw_card('${data.cards[i].card_num}','${data.cards[i].priority_num}')" ><img src='assets/cards/${data.cards[i].img_name}'></li>`;
+      }
+      $(".instruction_div").text(`${second_user.name} you please wait. `).show();
+      for(i=0; i<5; i++){
+        player1_card= player1_card+`<li class="list-group-item"  ><img src='assets/cards/blank-card.jpg'></li>`;
+      }
+      }
+      $('.first_user_cards').html(player1_card);
+      $('.second_user_cards').html(player2_card);
+    
+    })
+
+    function throw_card(card_num, card_prio_num){
+      //console.log(card_num+card_prio);
+      socket.emit('throw_card',{card_num:card_num,card_prio:card_prio_num});
+    }
+    socket.on('next_throw_card',function(data){
+     
+      var server_data = data.data;
+      //console.log(server_data);
+      var socket_id = socket.id;
+      $(".cards_div").show();
+      if(server_data.turn == "1"){
+        $(".user_1_img").show().attr("src",`assets/cards/${server_data.card_detls.img_name}`);
+        if(socket_id == server_data.player.id){
+          $(".instruction_div").text(`Hi ${server_data.player.name} Please you wait. `).show();
+        }else{
+           $(".instruction_div").text(`Now it is your turn.`).show();
+        }
+      }
+      if(server_data.turn == "2"){
+        $(".user_2_img").show().attr("src",`assets/cards/${server_data.card_detls.img_name}`);
+
+        if(socket_id == server_data.player.id){
+        //this block will always run for second users because turn ==2
+          if(server_data.user_first == "0" && server_data.user_second == "1"){
+            $(".user-win-noti").show().delay(32000).fadeOut(300);
+            $(".user-lost-noti").hide();
+          }
+          if(server_data.user_first == "1" && server_data.user_second == "0"){
+            $(".user-lost-noti").show().delay(32000).fadeOut(300);
+            $(".user-win-noti").hide();
+          }
+          if(server_data.user_first == "1" && server_data.user_second == "1"){
+            $(".user-win-noti").text('Ohhh! It is a tie.').show().delay(32000).fadeOut(300);
+            $(".user-lost-noti").hide();
+          }
+
+        }else{
+          if(server_data.user_first == "1" && server_data.user_second == "0"){
+            $(".user-win-noti").show().delay(32000).fadeOut(300);
+            $(".user-lost-noti").hide();
+          }
+          if(server_data.user_first == "0" && server_data.user_second == "1"){
+            $(".user-lost-noti").show().delay(32000).fadeOut(300);
+            $(".user-win-noti").hide();
+          }
+          if(server_data.user_first == "1" && server_data.user_second == "1"){
+            $(".user-win-noti").text('Ohhh! It is a tie.').show().delay(32000).fadeOut(300);
+            $(".user-lost-noti").hide();
+          }
+        }
+        setTimeout(function(){
+          $(".user_2_img").hide();
+          $(".user_1_img").hide();
+          
+        },3000);
+
+        //setting of score card table
+        if(server_data.turn == "2"){
+          console.log(server_data);
+          var f_user_name = server_data.f_user_name;
+          var s_user_name = server_data.s_user_name;
+          if(server_data.user_first == "1" && server_data.user_second == "0"){
+            var tr_html = `<tr><td>${server_data.pass}</td><td>2</td><td>0</td></tr>`;
+          }else if(server_data.user_first == "0" && server_data.user_second == "1"){
+            var tr_html = `<tr><td>${server_data.pass}</td><td>0</td><td>2</td></tr>`;
+          }else{
+            var tr_html = `<tr><td>${server_data.pass}</td><td>1</td><td>1</td></tr>`;
+          }
+          $("#f_user_span").text(`(${f_user_name})`);
+          $("#s_user_span").text(`(${s_user_name})`);
+
+          $('#users-score-card tr:last').after(tr_html);
+          
+          
+        }
+        if(socket_id == server_data.player.id){
+          $(".instruction_div").text(`Hi ${server_data.player.name} Please you wait. `).show();
+        }else{
+           $(".instruction_div").text(`Now it is your turn.`).show();
+        }
+        if(server_data.pass == "5"){
+          console.log(server_data.user_points);
+           $(".instruction_div").text(`Hi Everyone. Game is over. If you want to play again. Please reload the page`).show();
+          if(socket_id == server_data.user_points.first_user_id){
+            if(server_data.user_points.first_user_score>server_data.user_points.second_user_score){
+              
+                $(".user-win-noti").text('Congratulation! Finally you won.').show();
+                $(".user-lost-noti").hide();
+            }else if(server_data.user_points.first_user_score<server_data.user_points.second_user_score){
+                $(".user-lost-noti").text('Sorry! Finally you lost.').show();
+                $(".user-win-noti").hide();
+            }else{
+                $(".user-lost-noti").text('Ohhh! It is a tie.').show();
+                $(".user-win-noti").hide();
+            }
+          }else if(socket_id == server_data.user_points.second_user_id){
+            if(server_data.user_points.first_user_score<server_data.user_points.second_user_score){
+                $(".user-win-noti").text('Congratulation! Finally you won.').show();
+                $(".user-lost-noti").hide();
+            }else if(server_data.user_points.first_user_score>server_data.user_points.second_user_score){
+                $(".user-lost-noti").text('Sorry! Finally you lost.').show();
+                $(".user-win-noti").hide();
+            }else{
+                $(".user-lost-noti").text('Ohhh! It is a tie.').show();
+                $(".user-win-noti").hide();
+            }
+          }
+          var tr_tot_html = `<tr class=""><th>Total</th><th>${server_data.user_points.first_user_score}</th><th>${server_data.user_points.second_user_score}</th></tr>`;
+          $('#users-score-card tr:last').after(tr_tot_html);
+          //$(".cards_div").hide();
+        }
+
+      }
+      
+    })
+</script>
+</html>
+<!--
+card_detls: Object { card_name: "A1-8", card_num: "8", priority_num: "8", … }
+​
+player_2: Object { id: "Cf7h0WdeKP_s-ZMQAAAB", name: "Test 1", email: "test@gmail.com" }
+​0
+turn: 2
+​
+user_first: 1
+​
+user_second: 0
+-->

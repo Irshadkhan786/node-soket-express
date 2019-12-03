@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>App || Registration</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  {{> common_head}}
+  {{> common_foot}}
+</head>
+<body>
+
+<div class="container">
+  <h2>Login Page</h2>
+  <div class="row">
+      <div class="col-md-8 col-offset-md-2">
+        {{#if err_mess}}
+        <div class="alert alert-danger">{{err_mess}}</div>
+        {{/if}}
+        <form action="/userlogin" method="post">
+            
+            <div class="form-group">
+            <label for="pwd">Email:</label>
+            <input type="email" class="form-control" id="email" placeholder="Enter Email" name="email">
+            </div>
+            <div class="form-group">
+            <label for="pwd">Password:</label>
+            <input type="password" class="form-control" id="password" placeholder="Enter Password" name="password">
+            </div>
+            
+            
+            <button type="submit" class="btn btn-default">Submit</button>
+            <span><a href="/">Register</a> if do not have account</span>
+        </form>
+      </div>
+       
+  </div>
+ 
+</div>
+
+</body>
+</html>
+

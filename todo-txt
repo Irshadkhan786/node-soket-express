@@ -1,0 +1,23 @@
+1- Add server validation in regitration form
+2- Add Created Date
+3 - Add Pagination on listing page
+4- IF else condition
+==================================
+some liberary to be used in javascript
+1- validator for form validation
+2- moment.js for time formate
+
+==============================================
+App.use: It is used to configure express middleware
+App.set: To set various prperties like app.set('title','Hello world'), setting of template engion;
+body-prser: This is used to parse the request. 
+bodyparer.urlencoded({extened:ture}): To parse text in urlencoded format(All form fieldes) and set it on req.body .
+                                      Used for post request. extended:true meanse it can handle nested object and it uses QS library to parse object.
+                                      and false means can not handle nested object and it uses QueryString library to parse object.
+bodyparser.json(): o parse text in json format(All form fieldes) and set it on req.body.  
+=========================================================================
+is passport is only for authentication
+when to use serialize() and deserilaize() 
+advantage of serialize and deserilaize
+why to use passport if we are having session based facility in node
+session only work on server and its id is sent to client(stored in cookie of browser). then how...?                                 
